@@ -9,34 +9,46 @@ import java.util.List;
 import static java.lang.Math.min;
 
 public class MyPath implements Path {
-    private List<Integer> nList;
+    private int size;
+    private Integer[] nodes;
+    private List<Integer> nodeList;
+    
+    private Integer distinctNodeCount = null;
     
     public MyPath(int... nodeList) {
-        Integer[] temp = new Integer[nodeList.length];
+        size = nodeList.length;
+        nodes = new Integer[size];
         for (int i = nodeList.length - 1; i >= 0; i--) {
-            temp[i] = nodeList[i];
+            nodes[i] = nodeList[i];
         }
-        nList = Arrays.asList(temp);
+        this.nodeList = Arrays.asList(nodes);
+    }
+    
+    public List<Integer> getNodeList() {
+        return nodeList;
     }
     
     @Override
     public int size() {
-        return nList.size();
+        return size;
     }
     
     @Override
     public int getNode(int index) {
-        return nList.get(index);
+        return nodes[index];
     }
     
     @Override
     public boolean containsNode(int node) {
-        return nList.contains(node);
+        return nodeList.contains(node);
     }
     
     @Override
     public int getDistinctNodeCount() {
-        return (int) nList.stream().distinct().count();
+        if (distinctNodeCount == null) {
+            distinctNodeCount = (int) nodeList.stream().distinct().count();
+        }
+        return distinctNodeCount;
     }
     
     @Override
@@ -46,7 +58,7 @@ public class MyPath implements Path {
     
     @Override
     public Iterator<Integer> iterator() {
-        return nList.iterator();
+        return nodeList.iterator();
     }
     
     @Override
@@ -54,7 +66,7 @@ public class MyPath implements Path {
         int size = min(this.size(), path.size());
         int result;
         for (int i = 0; i < size; i++) {
-            result = Integer.compare(nList.get(i), path.getNode(i));
+            result = Integer.compare(nodes[i], path.getNode(i));
             if (result != 0) {
                 return result;
             }
@@ -70,7 +82,7 @@ public class MyPath implements Path {
                 return false;
             }
             for (int i = size() - 1; i >= 0; i--) {
-                if (!nList.get(i).equals(other.getNode(i))) {
+                if (!nodes[i].equals(other.getNode(i))) {
                     return false;
                 }
             }
@@ -80,7 +92,12 @@ public class MyPath implements Path {
     }
     
     @Override
+    public int hashCode() {
+        return nodes[0] + nodes[1] + size;
+    }
+    
+    @Override
     public String toString() {
-        return nList.toString();
+        return nodeList.toString();
     }
 }

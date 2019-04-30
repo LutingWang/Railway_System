@@ -5,40 +5,41 @@ import com.oocourse.specs1.models.PathContainer;
 import com.oocourse.specs1.models.PathIdNotFoundException;
 import com.oocourse.specs1.models.PathNotFoundException;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class MyPathContainer implements PathContainer {
-    private ArrayList<Path> pList = new ArrayList<>();
-    private ArrayList<Integer> pidList = new ArrayList<>();
-    private int pid = 1; // TODO: check algorithm for pid generating
+    private HashMap<Path, Integer> p2id = new HashMap<>();
+    private HashMap<Integer, Path> id2p = new HashMap<>();
+    
+    private int pid = 1;
+    private Integer distNodeCountCache = null;
     
     public MyPathContainer() {}
     
     @Override
     public int size() {
-        return pList.size();
+        return p2id.size();
     }
     
     @Override
     public boolean containsPath(Path path) {
-        return pList.contains(path);
+        return p2id.containsKey(path);
     }
     
     @Override
     public boolean containsPathId(int pathId) {
-        return pidList.contains(pathId);
+        return id2p.containsKey(pathId);
     }
     
     @Override
     public Path getPathById(int pathId) throws PathIdNotFoundException {
-        int ind = pidList.indexOf(pathId);
-        if (ind == -1) {
+        Path p = id2p.get(pathId);
+        if (p == null) {
             throw new PathIdNotFoundException(pathId);
         } else {
-            return pList.get(ind);
+            return p;
         }
     }
     
@@ -47,11 +48,11 @@ public class MyPathContainer implements PathContainer {
         if (path == null || !path.isValid()) {
             throw new PathNotFoundException(path);
         }
-        int ind = pList.indexOf(path);
-        if (ind == -1) {
+        Integer id = p2id.get(path);
+        if (id == null) {
             throw new PathNotFoundException(path);
         } else {
-            return pidList.get(ind);
+            return id;
         }
     }
     
@@ -60,13 +61,14 @@ public class MyPathContainer implements PathContainer {
         if (path == null || !path.isValid()) {
             return 0;
         }
-        int ind = pList.indexOf(path);
-        if (ind == -1) {
-            pList.add(path);
-            pidList.add(pid);
+        Integer id = p2id.get(path);
+        if (id == null) {
+            distNodeCountCache = null;
+            p2id.put(path, pid);
+            id2p.put(pid, path);
             return pid++;
         } else {
-            return pidList.get(ind);
+            return id;
         }
     }
     
@@ -75,44 +77,51 @@ public class MyPathContainer implements PathContainer {
         if (path == null || !path.isValid()) {
             throw new PathNotFoundException(path);
         }
-        int ind = pList.indexOf(path);
-        if (ind == -1) {
+        Integer id = p2id.get(path);
+        if (id == null) {
             throw new PathNotFoundException(path);
         } else {
-            pList.remove(ind);
-            return pidList.remove(ind);
+            distNodeCountCache = null;
+            p2id.remove(path);
+            id2p.remove(id);
+            return id;
         }
     }
     
     @Override
     public void removePathById(int pathId) throws PathIdNotFoundException {
-        int ind = pidList.indexOf(pathId);
-        if (ind == -1) {
+        Path p = id2p.get(pathId);
+        if (p == null) {
             throw new PathIdNotFoundException(pathId);
         } else {
-            pList.remove(ind);
-            pidList.remove(ind);
+            distNodeCountCache = null;
+            p2id.remove(p);
+            id2p.remove(pathId);
         }
     }
     
     @Override
     public int getDistinctNodeCount() {
-        Function<Path, Stream<Integer>> mapper = path -> {
-            Integer[] temp = new Integer[path.size()];
-            for (int i = path.size() - 1; i >= 0; i--) {
-                temp[i] = path.getNode(i);
-            }
-            return Stream.of(temp);
-        };
-        return (int) pList.stream().flatMap(mapper).distinct().count();
+        if (distNodeCountCache == null) {
+            Function<Path, Stream<Integer>> mapper = path -> {
+                if (path instanceof MyPath) {
+                    return ((MyPath) path).getNodeList().stream();
+                } else {
+                    Integer[] temp = new Integer[path.size()];
+                    for (int i = path.size() - 1; i >= 0; i--) {
+                        temp[i] = path.getNode(i);
+                    }
+                    return Stream.of(temp);
+                }
+            };
+            distNodeCountCache = (int) p2id.keySet()
+                    .stream().flatMap(mapper).distinct().count();
+        }
+        return distNodeCountCache;
     }
     
     @Override
     public String toString() {
-        HashMap<Integer, Path> temp = new HashMap<>();
-        for (int i = 0; i < pList.size(); i++) {
-            temp.put(pidList.get(i), pList.get(i));
-        }
-        return temp.toString();
+        return id2p.toString();
     }
 }
