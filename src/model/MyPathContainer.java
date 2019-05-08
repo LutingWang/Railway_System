@@ -1,20 +1,21 @@
 package model;
 
-import com.oocourse.specs1.models.Path;
-import com.oocourse.specs1.models.PathContainer;
-import com.oocourse.specs1.models.PathIdNotFoundException;
-import com.oocourse.specs1.models.PathNotFoundException;
+import com.oocourse.specs2.models.Path;
+import com.oocourse.specs2.models.PathContainer;
+import com.oocourse.specs2.models.PathIdNotFoundException;
+import com.oocourse.specs2.models.PathNotFoundException;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.function.Function;
-import java.util.stream.Stream;
+import java.util.HashSet;
 
 public class MyPathContainer implements PathContainer {
     private HashMap<Path, Integer> p2id = new HashMap<>();
     private HashMap<Integer, Path> id2p = new HashMap<>();
     
     private int pid = 1;
-    private Integer distNodeCountCache = null;
+    private HashSet<Integer> distinctNodes = null;
     
     public MyPathContainer() {}
     
@@ -63,7 +64,7 @@ public class MyPathContainer implements PathContainer {
         }
         Integer id = p2id.get(path);
         if (id == null) {
-            distNodeCountCache = null;
+            distinctNodes = null;
             p2id.put(path, pid);
             id2p.put(pid, path);
             return pid++;
@@ -81,7 +82,7 @@ public class MyPathContainer implements PathContainer {
         if (id == null) {
             throw new PathNotFoundException(path);
         } else {
-            distNodeCountCache = null;
+            distinctNodes = null;
             p2id.remove(path);
             id2p.remove(id);
             return id;
@@ -94,7 +95,7 @@ public class MyPathContainer implements PathContainer {
         if (p == null) {
             throw new PathIdNotFoundException(pathId);
         } else {
-            distNodeCountCache = null;
+            distinctNodes = null;
             p2id.remove(p);
             id2p.remove(pathId);
         }
@@ -102,22 +103,27 @@ public class MyPathContainer implements PathContainer {
     
     @Override
     public int getDistinctNodeCount() {
-        if (distNodeCountCache == null) {
-            Function<Path, Stream<Integer>> mapper = path -> {
+        if (distinctNodes == null) {
+            distinctNodes = new HashSet<>();
+            Collection<Integer> collection;
+            Integer[] integers;
+            for (Path path : p2id.keySet()) {
                 if (path instanceof MyPath) {
-                    return ((MyPath) path).getNodeList().stream();
-                } else {
-                    Integer[] temp = new Integer[path.size()];
-                    for (int i = path.size() - 1; i >= 0; i--) {
-                        temp[i] = path.getNode(i);
+                    collection = ((MyPath) path).getDistinctNodes();
+                    if (collection == null) {
+                        collection = ((MyPath) path).getNodeList();
                     }
-                    return Stream.of(temp);
+                    distinctNodes.addAll(collection);
+                } else {
+                    integers = new Integer[path.size()];
+                    for (int i = path.size() - 1; i >= 0; i--) {
+                        integers[i] = path.getNode(i);
+                    }
+                    Collections.addAll(distinctNodes, integers);
                 }
-            };
-            distNodeCountCache = (int) p2id.keySet()
-                    .stream().flatMap(mapper).distinct().count();
+            }
         }
-        return distNodeCountCache;
+        return distinctNodes.size();
     }
     
     @Override

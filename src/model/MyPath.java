@@ -1,54 +1,60 @@
 package model;
 
-import com.oocourse.specs1.models.Path;
+import com.oocourse.specs2.models.Path;
 
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.Iterator;
 
 import static java.lang.Math.min;
 
 public class MyPath implements Path {
-    private int size;
-    private Integer[] nodes;
     private List<Integer> nodeList;
-    
-    private Integer distinctNodeCount = null;
+    private HashSet<Integer> distinctNodes = null;
     
     public MyPath(int... nodeList) {
-        size = nodeList.length;
-        nodes = new Integer[size];
+        Integer[] nodes = new Integer[nodeList.length];
         for (int i = nodeList.length - 1; i >= 0; i--) {
             nodes[i] = nodeList[i];
         }
         this.nodeList = Arrays.asList(nodes);
     }
     
-    public List<Integer> getNodeList() {
+    List<Integer> getNodeList() {
         return nodeList;
+    }
+    
+    Set<Integer> getDistinctNodes() {
+        return distinctNodes;
     }
     
     @Override
     public int size() {
-        return size;
+        return nodeList.size();
     }
     
     @Override
     public int getNode(int index) {
-        return nodes[index];
+        return nodeList.get(index);
     }
     
     @Override
     public boolean containsNode(int node) {
-        return nodeList.contains(node);
+        if (distinctNodes == null) {
+            return nodeList.contains(node);
+        } else {
+            return distinctNodes.contains(node);
+        }
     }
     
     @Override
     public int getDistinctNodeCount() {
-        if (distinctNodeCount == null) {
-            distinctNodeCount = (int) nodeList.stream().distinct().count();
+        if (distinctNodes == null) {
+            distinctNodes = new HashSet<>(nodeList);
         }
-        return distinctNodeCount;
+        return distinctNodes.size();
     }
     
     @Override
@@ -66,7 +72,7 @@ public class MyPath implements Path {
         int size = min(this.size(), path.size());
         int result;
         for (int i = 0; i < size; i++) {
-            result = Integer.compare(nodes[i], path.getNode(i));
+            result = Integer.compare(nodeList.get(i), path.getNode(i));
             if (result != 0) {
                 return result;
             }
@@ -82,7 +88,7 @@ public class MyPath implements Path {
                 return false;
             }
             for (int i = size() - 1; i >= 0; i--) {
-                if (!nodes[i].equals(other.getNode(i))) {
+                if (!nodeList.get(i).equals(other.getNode(i))) {
                     return false;
                 }
             }
@@ -91,9 +97,9 @@ public class MyPath implements Path {
         return false;
     }
     
-    @Override
+    @Override // TODO: check if there is other class extends path
     public int hashCode() {
-        return nodes[0] + nodes[1] + size;
+        return nodeList.get(0) + nodeList.get(0) + size();
     }
     
     @Override
