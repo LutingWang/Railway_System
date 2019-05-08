@@ -28,15 +28,16 @@ public class MyGraph extends MyPathContainer implements Graph {
     
     @Override
     public int removePath(Path path) throws PathNotFoundException {
-        int result = super.removePath(path);
-        int firstNode = path.getNode(0);
-        int secondNode;
+        final int result = super.removePath(path);
+        int firstNode;
+        int secondNode = path.getNode(0);
         for (int i = 1; i < path.size(); i++) {
+            firstNode = secondNode;
             secondNode = path.getNode(i);
             graph.removeEdge(firstNode, secondNode);
             graph.removeIfIsolated(firstNode);
-            firstNode = secondNode;
         }
+        graph.removeIfIsolated(secondNode);
         graph.initDistance();
         return result;
     }
@@ -53,6 +54,11 @@ public class MyGraph extends MyPathContainer implements Graph {
                 throw new PathIdNotFoundException(pathId);
             }
         }
+    }
+    
+    @Override
+    public int getDistinctNodeCount() {
+        return graph.size();
     }
     
     @Override

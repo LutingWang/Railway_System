@@ -32,6 +32,10 @@ public class Graph {
         }
     }
     
+    public int size() {
+        return n2id.size();
+    }
+    
     public void initDistance() {
         distance = new int[capacity][capacity];
         for (int i = 0; i < capacity; i++) {

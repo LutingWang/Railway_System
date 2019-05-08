@@ -14,7 +14,7 @@ public class Main {
     
     public static void main(String[] args) throws Exception {
         if (REDIR) {
-            System.setIn(new FileInputStream("./test/test"));
+            System.setIn(new FileInputStream("./test/test.txt"));
             System.setOut(new PrintStream(
                     new FileOutputStream("./test/out.txt")));
         }
