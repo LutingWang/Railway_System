@@ -1,13 +1,15 @@
 package datastructure.exceptions;
 
+import datastructure.Node;
+
 public class NodeNotExistException extends Exception {
-    private int nodeId;
+    private Node<?> node;
     
-    public NodeNotExistException(int nodeId) {
-        this.nodeId = nodeId;
+    public NodeNotExistException(Node<?> node) {
+        this.node = node;
     }
     
-    public int getNodeId() {
-        return nodeId;
+    public Node<?> getNode() {
+        return node;
     }
 }

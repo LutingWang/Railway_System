@@ -9,49 +9,51 @@ import java.util.LinkedList;
 
 /**
  * precondition:
- *     distinct nodes cannot exceed 250;
  *     no isolate node exists;
  *         (guaranteed by contract valid path consists of at least 2 nodes)
- *     all nodes are int;
  */
-public class Graph {
-    private static final int capacity = 250;
-    
-    private HashMap<Integer, Integer> n2id = new HashMap<>(capacity);
-    private LinkedList<Integer> vacantIds = new LinkedList<>();
-    private int[][] access = new int[capacity][capacity]; // entries non-neg
+public class Graph<T extends Node<?>> {
+    private final int capacity;
+    private final LinkedList<Integer> vacantIds = new LinkedList<>();
+    private final HashMap<T, Integer> n2id;
+    private final HashMap<Integer, T> id2n;
     private int[][] distance;
     
-    public Graph() {
+    public Graph(int capacity) {
+        this.capacity = capacity;
+        this.n2id = new HashMap<>(capacity);
+        this.id2n = new HashMap<>(capacity);
         initDistance();
         for (int i = 0; i < capacity; i++) {
             vacantIds.add(i);
-            for (int j = 0; j < capacity; j++) {
-                access[i][j] = 0;
-            }
         }
+    }
+    
+    protected int getCapacity() {
+        return capacity;
     }
     
     public int size() {
         return n2id.size();
     }
     
-    public void initDistance() {
+    protected void initDistance() {
         distance = new int[capacity][capacity];
-        for (int i = 0; i < capacity; i++) {
-            for (int j = 0; j < capacity; j++) {
-                if (i != j) {
-                    if (access[i][j] != 0) {
-                        distance[i][j] = 1; // contains edge
-                    } else {
-                        distance[i][j] = -1; // did not run
-                    }
-                }
-            }
+        for (Node<?> node : n2id.keySet()) {
+        
         }
     }
     
-    private int getNodeId(int node) {
+    protected int getNodeId(T node) throws NodeNotExistException {
+        Integer result = n2id.get(node);
+        if (result == null) {
+            throw new NodeNotExistException(node);
+        } else {
+            return result;
+        }
+    }
+    
+    protected int createAndGetNodeId(T node) {
         Integer result = n2id.get(node);
         if (result == null) {
             result = vacantIds.removeFirst();
@@ -61,11 +63,11 @@ public class Graph {
         return result;
     }
     
-    public boolean containsNode(int node) {
+    public boolean containsNode(T node) {
         return n2id.get(node) != null;
     }
     
-    public boolean containsEdge(int start, int end) {
+    public boolean containsEdge(T start, T end) {
         Integer firstId = n2id.get(start);
         Integer secondId = n2id.get(end);
         if (firstId == null || secondId == null) {
@@ -76,14 +78,14 @@ public class Graph {
         return access[firstId][secondId] != 0;
     }
     
-    public void addEdge(int start, int end) {
-        int firstId = getNodeId(start);
-        int secondId = getNodeId(end);
+    public void addEdge(T start, T end) {
+        int firstId = createAndGetNodeId(start);
+        int secondId = createAndGetNodeId(end);
         access[firstId][secondId]++;
         access[secondId][firstId]++;
     }
     
-    public void removeEdge(int start, int end) {
+    public void removeEdge(T start, T end) {
         int firstId = n2id.get(start);
         int secondId = n2id.get(end);
         access[firstId][secondId]--;
@@ -94,7 +96,7 @@ public class Graph {
         }
     }
     
-    public boolean removeIfIsolated(int node) {
+    public boolean removeIfIsolated(T node) {
         int id = n2id.get(node);
         for (int i = 0; i < capacity; i++) {
             if (access[i][id] + access[id][i] != 0) {
@@ -107,16 +109,11 @@ public class Graph {
         return true;
     }
     
-    public int bfs(int start, int end) throws NodeNotExistException {
-        Integer startId = n2id.get(start);
-        Integer endId = n2id.get(end);
-        if (startId == null) {
-            throw new NodeNotExistException(start);
-        } if (endId == null) {
-            throw new NodeNotExistException(end);
-        }
+    public int bfs(T start, T end) throws NodeNotExistException {
+        int startId = getNodeId(start);
+        int endId = getNodeId(end);
         assert !Main.DEBUG
-                || !startId.equals(endId) || distance[startId][endId] == 0;
+                || startId == endId || distance[startId][endId] == 0;
         if (distance[startId][endId] != -1) {
             return distance[startId][endId];
         }

@@ -12,6 +12,8 @@ public class Main {
     private static final boolean TIMER_ON = false; // TODO: turn off
     private static long timer;
     
+    public static final int MAX_DISTINCT_NODES = 120;
+    
     public static void main(String[] args) throws Exception {
         if (REDIR) {
             System.setIn(new FileInputStream("./test/test.txt"));

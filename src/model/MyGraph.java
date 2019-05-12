@@ -9,7 +9,7 @@ import com.oocourse.specs2.models.NodeNotConnectedException;
 import datastructure.exceptions.NodeNotExistException;
 
 public class MyGraph extends MyPathContainer implements Graph {
-    private datastructure.Graph graph = new datastructure.Graph();
+    private datastructure.Graph graph = new datastructure.Graph(1); // TODO:
     
     public MyGraph() {}
     
