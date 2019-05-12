@@ -15,6 +15,9 @@ public class MyGraph extends MyPathContainer implements Graph {
     
     @Override
     public int addPath(Path path) {
+        try {
+            return super.getPathId(path);
+        } catch (PathNotFoundException e) { /* nothing */ }
         int result = super.addPath(path);
         if (result == 0) {
             return result;
