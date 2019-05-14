@@ -56,6 +56,11 @@ public class MyRailwaySystem extends MyPathContainer implements RailwaySystem {
         n2lines = new HashMap<>();
     }
     
+    private int unpleasant(int firstNode, int secondNode) {
+        return (int) Math.pow(4,
+                Math.max((firstNode % 5 + 5) % 5, (secondNode % 5 + 5) % 5));
+    }
+    
     @Override
     public int addPath(Path path) {
         try {
@@ -88,7 +93,7 @@ public class MyRailwaySystem extends MyPathContainer implements RailwaySystem {
                     new Node(secondNode, pathId), 1);
             unsatisfaction.addEdge(new Node(firstNode, pathId),
                     new Node(secondNode, pathId),
-                    (int) Math.pow(4, Math.max(firstNode % 5, secondNode % 5)));
+                    unpleasant(firstNode, secondNode));
             network.addEdge(firstNode, secondNode, 1);
         }
         return pathId;
@@ -111,7 +116,7 @@ public class MyRailwaySystem extends MyPathContainer implements RailwaySystem {
                 }
             }
         }
-        int firstNode = 0;
+        int firstNode;
         int secondNode = path.getNode(0);
         for (int i = 1; i < path.size(); i++) {
             firstNode = secondNode;
@@ -120,7 +125,7 @@ public class MyRailwaySystem extends MyPathContainer implements RailwaySystem {
                     new Node(secondNode, pathId), 1);
             unsatisfaction.removeEdge(new Node(firstNode, pathId),
                     new Node(secondNode, pathId),
-                    (int) Math.pow(4, Math.max(firstNode % 5, secondNode % 5)));
+                    unpleasant(firstNode, secondNode));
             network.removeEdge(firstNode, secondNode, 1);
         }
         return pathId;
