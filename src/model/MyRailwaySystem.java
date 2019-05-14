@@ -228,6 +228,11 @@ public class MyRailwaySystem extends MyPathContainer implements RailwaySystem {
         if (toLines == null) {
             throw new NodeIdNotFoundException(toNodeId);
         }
+        for (int line : fromLines) {
+            if (toLines.contains(line)) {
+                return 0;
+            }
+        }
         int result;
         try {
             result = transfer
