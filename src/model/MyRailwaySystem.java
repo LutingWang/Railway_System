@@ -163,9 +163,6 @@ public class MyRailwaySystem extends MyPathContainer implements RailwaySystem {
     @Override
     public boolean isConnected(int fromNodeId, int toNodeId)
             throws NodeIdNotFoundException {
-        if (fromNodeId == toNodeId) {
-            return true;
-        }
         try {
             return network.bfs(node -> node.equals(fromNodeId),
                 node -> node.equals(toNodeId)) != Integer.MAX_VALUE;

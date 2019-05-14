@@ -171,6 +171,11 @@ public class Graph<T> {
             throws NodeNotExistException {
         Set<Integer> startId = filterNodes(start);
         Set<Integer> endId = filterNodes(end);
+        for (int id : startId) {
+            if (endId.contains(id)) {
+                return 0;
+            }
+        }
         HashSet<Integer> visited = new HashSet<>(startId);
         HashSet<Integer> currentlyVisiting = new HashSet<>(startId);
         HashSet<Integer> toVisit = new HashSet<>();
@@ -224,6 +229,11 @@ public class Graph<T> {
             throws NodeNotExistException {
         Set<Integer> candidates = filterNodes(start);
         Set<Integer> endId = filterNodes(end);
+        for (int id : candidates) {
+            if (endId.contains(id)) {
+                return 0;
+            }
+        }
         int[] distance = new int[capacity];
         for (int i = 0; i < capacity; i++) {
             distance[i] = Integer.MAX_VALUE;
