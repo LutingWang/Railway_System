@@ -1,64 +1,110 @@
 package datastructure;
 
 import datastructure.exceptions.NodeNotExistException;
-import model.Main;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * precondition:
+ *     distinct nodes cannot exceed capacity;
  *     no isolate node exists;
  *         (guaranteed by contract valid path consists of at least 2 nodes)
  */
-public class Graph<T extends Node<?>> {
+public class Graph<T> {
     private final int capacity;
-    private final LinkedList<Integer> vacantIds = new LinkedList<>();
-    private final HashMap<T, Integer> n2id;
-    private final HashMap<Integer, T> id2n;
-    private int[][] distance;
     
-    public Graph(int capacity) {
-        this.capacity = capacity;
-        this.n2id = new HashMap<>(capacity);
-        this.id2n = new HashMap<>(capacity);
-        initDistance();
-        for (int i = 0; i < capacity; i++) {
-            vacantIds.add(i);
+    private final class Access {
+        // firstId -> secondId -> weights
+        // firstId <= secondId
+        private boolean[][] data;
+        private HashMap<Integer, ArrayList<Integer>> base;
+        
+        Access() {
+            data = new boolean[capacity][capacity];
+            for (int i = 0; i < capacity; i++) {
+                for (int j = 0; j < capacity; j++) {
+                    data[i][j] = false;
+                }
+            }
+            base = new HashMap<>();
+        }
+        
+        private int hash(int a, int b) {
+            if (a <= b) {
+                return a * capacity + b;
+            } else {
+                return b * capacity + a;
+            }
+        }
+        
+        boolean add(int firstId, int secondId, int e) {
+            int pos = hash(firstId, secondId);
+            if (!data[firstId][secondId]) {
+                data[firstId][secondId] = true;
+                data[secondId][firstId] = true;
+                base.put(pos, new ArrayList<>());
+            }
+            return base.get(pos).add(e);
+        }
+        
+        boolean contains(int firstId, int secondId, int e) {
+            if (data[firstId][secondId]) {
+                return base.get(hash(firstId, secondId)).contains(e);
+            } else {
+                return false;
+            }
+        }
+        
+        boolean remove(int firstId, int secondId, Integer e) {
+            int pos = hash(firstId, secondId);
+            boolean result = base.get(pos).remove(e);
+            if (result && base.get(pos).size() == 0) {
+                base.remove(pos);
+                data[firstId][secondId] = false;
+                data[secondId][firstId] = false;
+            }
+            return result;
+        }
+        
+        boolean areNeighbours(int firstId, int secondId) {
+            return firstId != secondId && data[firstId][secondId];
+        }
+        
+        int min(int firstId, int secondId) {
+            return Collections.min(base.get(hash(firstId, secondId)));
         }
     }
     
-    protected int getCapacity() {
-        return capacity;
+    private HashMap<T, Integer> n2id;
+    private LinkedList<Integer> vacantIds = new LinkedList<>();
+    private Access access; // entries non-neg
+    
+    public Graph(int capacity) {
+        this.capacity = capacity;
+        n2id = new HashMap<>(capacity);
+        access = new Access();
+        for (int i = 0; i < capacity; i++) {
+            vacantIds.add(i);
+        }
     }
     
     public int size() {
         return n2id.size();
     }
     
-    protected void initDistance() {
-        distance = new int[capacity][capacity];
-        for (Node<?> node : n2id.keySet()) {
-        
-        }
-    }
-    
-    protected int getNodeId(T node) throws NodeNotExistException {
-        Integer result = n2id.get(node);
-        if (result == null) {
-            throw new NodeNotExistException(node);
-        } else {
-            return result;
-        }
-    }
-    
-    protected int createAndGetNodeId(T node) {
+    private int getNodeId(T node) {
         Integer result = n2id.get(node);
         if (result == null) {
             result = vacantIds.removeFirst();
             n2id.put(node, result);
-            distance[result][result] = 0;
         }
         return result;
     }
@@ -67,77 +113,78 @@ public class Graph<T extends Node<?>> {
         return n2id.get(node) != null;
     }
     
-    public boolean containsEdge(T start, T end) {
+    public boolean containsNode(Predicate<T> predicate) {
+        try {
+            filterNodes(predicate);
+            return true;
+        } catch (NodeNotExistException e) {
+            return false;
+        }
+    }
+    
+    public boolean containsEdge(T start, T end, int weight) {
         Integer firstId = n2id.get(start);
         Integer secondId = n2id.get(end);
         if (firstId == null || secondId == null) {
             return false;
         }
-        assert !Main.DEBUG
-                || access[firstId][secondId] == access[secondId][firstId];
-        return access[firstId][secondId] != 0;
+        return access.contains(firstId, secondId, weight);
     }
     
-    public void addEdge(T start, T end) {
-        int firstId = createAndGetNodeId(start);
-        int secondId = createAndGetNodeId(end);
-        access[firstId][secondId]++;
-        access[secondId][firstId]++;
+    public void addEdge(T start, T end, int weight) {
+        access.add(getNodeId(start), getNodeId(end), weight);
     }
     
-    public void removeEdge(T start, T end) {
-        int firstId = n2id.get(start);
-        int secondId = n2id.get(end);
-        access[firstId][secondId]--;
-        access[secondId][firstId]--;
-        if (Main.DEBUG) {
-            assert access[firstId][secondId] >= 0;
-            assert access[secondId][firstId] >= 0;
+    private void removeIfIsolated(T node) {
+        Integer id = n2id.get(node);
+        if (id == null) {
+            return;
         }
-    }
-    
-    public boolean removeIfIsolated(T node) {
-        int id = n2id.get(node);
         for (int i = 0; i < capacity; i++) {
-            if (access[i][id] + access[id][i] != 0) {
-                return false;
+            if (access.data[id][i]) {
+                return;
             }
         }
         n2id.remove(node);
         vacantIds.addFirst(id);
-        distance[id][id] = -1;
-        return true;
     }
     
-    public int bfs(T start, T end) throws NodeNotExistException {
-        int startId = getNodeId(start);
-        int endId = getNodeId(end);
-        assert !Main.DEBUG
-                || startId == endId || distance[startId][endId] == 0;
-        if (distance[startId][endId] != -1) {
-            return distance[startId][endId];
+    public void removeEdge(T start, T end, int weight) {
+        access.remove(n2id.get(start), n2id.get(end), weight);
+        removeIfIsolated(start);
+        removeIfIsolated(end);
+    }
+    
+    private Set<Integer> filterNodes(Predicate<T> predicate)
+            throws NodeNotExistException {
+        Set<Integer> result = n2id.entrySet().stream()
+                .filter(entry -> predicate.test(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toSet());
+        if (result.size() == 0) {
+            throw new NodeNotExistException(predicate);
         }
-        HashSet<Integer> visited = new HashSet<>();
-        HashSet<Integer> currentlyVisiting = new HashSet<>();
+        return result;
+    }
+    
+    public int bfs(Predicate<T> start, Predicate<T> end)
+            throws NodeNotExistException {
+        Set<Integer> startId = filterNodes(start);
+        Set<Integer> endId = filterNodes(end);
+        HashSet<Integer> visited = new HashSet<>(startId);
+        HashSet<Integer> currentlyVisiting = new HashSet<>(startId);
         HashSet<Integer> toVisit = new HashSet<>();
-        visited.add(startId);
-        currentlyVisiting.add(startId);
         for (int length = 1; true; length++) {
             if (currentlyVisiting.size() == 0) {
                 return Integer.MAX_VALUE;
             }
             for (int id : currentlyVisiting) {
                 for (int validId : n2id.values()) {
-                    assert !Main.DEBUG
-                            || access[id][validId] == access[validId][id];
-                    if (access[id][validId] == 0 // not accessible
-                            || id == validId // self
+                    if (!access.areNeighbours(id, validId)
                             || visited.contains(validId)) { // already visited
                         continue;
                     }
-                    distance[startId][validId] = length;
-                    distance[validId][startId] = length;
-                    if (validId == endId) {
+                    if (endId.contains(validId)) {
                         return length;
                     }
                     toVisit.add(validId);
@@ -147,5 +194,69 @@ public class Graph<T extends Node<?>> {
             visited.addAll(currentlyVisiting);
             toVisit = new HashSet<>();
         }
+    }
+    
+    public int connectedBlocks() {
+        ArrayList<Integer> remaining = new ArrayList<>(n2id.values());
+        HashSet<Integer> visited = new HashSet<>();
+        ArrayList<Integer> currentlyVisiting = new ArrayList<>();
+        int count = 0;
+        while (!remaining.isEmpty()) {
+            if (currentlyVisiting.isEmpty()) {
+                count++;
+                currentlyVisiting.add(remaining.remove(0));
+            }
+            int id = currentlyVisiting.remove(0);
+            visited.add(id);
+            for (int i = 0; i < capacity; i++) {
+                if (access.areNeighbours(id, i)
+                        && !visited.contains(i)
+                        && !currentlyVisiting.contains(i)) {
+                    currentlyVisiting.add(i);
+                    remaining.remove((Integer) i);
+                }
+            }
+        }
+        return count;
+    }
+    
+    public int dijskstra(Predicate<T> start, Predicate<T> end)
+            throws NodeNotExistException {
+        Set<Integer> candidates = filterNodes(start);
+        Set<Integer> endId = filterNodes(end);
+        int[] distance = new int[capacity];
+        for (int i = 0; i < capacity; i++) {
+            distance[i] = Integer.MAX_VALUE;
+        }
+        for (int id : candidates) {
+            distance[id] = 0;
+        }
+        while (candidates.size() != 0) {
+            int id = -1;
+            int value = Integer.MAX_VALUE;
+            for (int candidate : candidates) {
+                if (distance[candidate] < value) {
+                    value = distance[candidate];
+                    id = candidate;
+                }
+            }
+            if (endId.contains(id)) {
+                return value;
+            }
+            candidates.remove(id);
+            for (int validId : n2id.values()) {
+                if (!access.areNeighbours(id, validId)) {
+                    continue;
+                }
+                if (distance[validId] == Integer.MAX_VALUE) {
+                    candidates.add(validId);
+                    distance[validId] = value + access.min(id, validId);
+                } else {
+                    distance[validId] = Math.min(distance[validId],
+                            value + access.min(id, validId));
+                }
+            }
+        }
+        return Integer.MAX_VALUE;
     }
 }
