@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
  *     no isolate node exists;
  *         (guaranteed by contract valid path consists of at least 2 nodes)
  */
+@SuppressWarnings("unchecked")
 public class Graph<T> {
     private final int capacity;
     
