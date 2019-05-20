@@ -97,6 +97,9 @@ public class Graph<T> {
         }
     }
     
+    /*@
+      @ ensures \result >= 200;
+      @*/
     public int size() {
         return n2id.size();
     }

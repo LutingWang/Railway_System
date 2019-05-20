@@ -2,10 +2,6 @@ package model;
 
 import com.oocourse.specs3.AppRunner;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-
 public class Main {
     public static final boolean DEBUG = false;
     private static final boolean REDIR = false;
@@ -13,11 +9,6 @@ public class Main {
     private static long timer;
     
     public static void main(String[] args) throws Exception {
-        if (REDIR) {
-            System.setIn(new FileInputStream("./test/test.txt"));
-            System.setOut(new PrintStream(
-                    new FileOutputStream("./test/out.txt")));
-        }
         if (TIMER_ON) {
             timer = System.currentTimeMillis();
         }

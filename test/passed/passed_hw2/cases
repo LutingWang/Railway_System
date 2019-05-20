@@ -1,0 +1,74 @@
+>PATH_ADD 1 2 2 3
+>PATH_ADD 3
+>PATH_REMOVE 1 2 3
+>CONTAINS_PATH 1 2 2 3
+>IS_NODE_CONNECTED 1 2
+>SHORTEST_PATH_LENGTH 1 3
+##Ok, path id is 1.
+##Failed, invalid path.
+##Failed, path not exist.
+##Yes.
+##Yes.
+##Ok, length is 2.
+
+>PATH_ADD -3 0 5
+>PATH_ADD -2 0
+>PATH_REMOVE 0 -2
+>CONTAINS_NODE 0
+>CONTAINS_EDGE 5 0
+>CONTAINS_EDGE 5 -3
+>SHORTEST_PATH_LENGTH -3 -2
+##Ok, path id is 1.
+##Ok, path id is 2.
+##Failed, path not exist.
+##Yes.
+##Yes.
+##No.
+##Ok, length is 2.
+
+>PATH_ADD 1 2 3 5
+>PATH_ADD 1 2 4 3 4
+>PATH_ADD 1 2 3 5
+>PATH_DISTINCT_NODE_COUNT 2
+>DISTINCT_NODE_COUNT
+>IS_NODE_CONNECTED 5 6
+>CONTAINS_EDGE 5 6
+>SHORTEST_PATH_LENGTH 2 3
+##Ok, path id is 1.
+##Ok, path id is 2.
+##Ok, path id is 1.
+##Ok, distinct myNode count of path is 4.
+##Ok, distinct myNode count is 5.
+##Failed, myNode id not exist.
+##No.
+##Ok, length is 1.
+
+>PATH_ADD 1 2 3 4 5
+>PATH_ADD 2 5 7 8 9
+>PATH_ADD 3 6 8 10 11
+>PATH_ADD 12 14 15
+>SHORTEST_PATH_LENGTH 1 11
+>SHORTEST_PATH_LENGTH 5 10
+>SHORTEST_PATH_LENGTH 1 15
+>SHORTEST_PATH_LENGTH 1 13
+>PATH_ADD 4 14
+>SHORTEST_PATH_LENGTH 1 15
+>SHORTEST_PATH_LENGTH 1 13
+>PATH_REMOVE_BY_ID 5
+>SHORTEST_PATH_LENGTH 1 15
+>SHORTEST_PATH_LENGTH 1 13
+##Ok, path id is 1.
+##Ok, path id is 2.
+##Ok, path id is 3.
+##Ok, path id is 4.
+##Ok, length is 6.
+##Ok, length is 3.
+##Failed, myNode not connected with each other.
+##Failed, myNode id not exist.
+##Ok, path id is 5.
+##Ok, length is 5.
+##Failed, myNode id not exist.
+##Ok, path removed.
+##Failed, myNode not connected with each other.
+##Failed, myNode id not exist.
+---------------------------------------------
